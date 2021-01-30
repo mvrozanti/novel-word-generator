@@ -1,1 +1,3 @@
 *.pkl
+*.txt
+__pycache__
