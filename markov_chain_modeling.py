@@ -115,7 +115,8 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--training-data', help='training data')
     parser.add_argument('-i', '--interact', action='store_true', help='interact')
     parser.add_argument('-o', '--order', type=int, default=8, help='Markov chain order, defaults to 8')
-    parser.add_argument('-g', '--generate', type=int, help='generate N words', default=0)
+    parser.add_argument('-n', '--number', type=int, help='generate a number of N words', default=1)
+    parser.add_argument('-r', '--regex', type=str, help='regex to generate')
     parser.add_argument('-p', '--plot', action='store_true', help='plot state-transition diagram')
     parser.add_argument('-v', '--verbose', action='store_true', help='show progress bar')
     args = parser.parse_args()
@@ -131,6 +132,5 @@ if __name__ == '__main__':
     if args.plot:
         while True:
             plot(g.chain)
-    if args.generate:
-        for i in range(args.generate):
-            print(g.nextNew())
+    for i in range(args.number):
+        print(g.nextNew())
