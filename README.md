@@ -1,7 +1,13 @@
 Markov-chain-based language model
 
-Run it:
+Example usage:
 
 ```python
-python markov_chain_modeling.py -t português.txt -m modelo.pickle
+# training
+python markov_chain_modeling.py train --wordlist <wordlist_path>
+```
+
+```python
+# generating
+python markov_chain_modeling.py generate --model <trained_model_path>
 ```

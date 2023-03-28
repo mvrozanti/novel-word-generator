@@ -45,9 +45,6 @@ class WeightedVector:
         assert(value < self.maxsize())
         assert(value >= 0.0)
         return self.elements[bisect.bisect(self.cummulative_weights, value)]
-    
-    # def __str__(self):
-    #     return 
 
 class MarkovChain:
 
@@ -55,7 +52,7 @@ class MarkovChain:
         self.order = order
         self.connections = {}
 
-    def train(self, data, verbose=False):
+    def train(self, data):
         if type(data) == str:
             if '\2' not in self.connections:
                 self.connections['\2'] = WeightedVector()
@@ -70,7 +67,7 @@ class MarkovChain:
                 self.connections[k] = WeightedVector()
             self.connections[k].add('\0', 1.)
         elif type(data) == list:
-            for word in (tqdm(data) if verbose else data):
+            for word in tqdm(data):
                 self.train(word)
 
     def maxsize(self):
@@ -93,15 +90,15 @@ class Generator:
         self.chain = MarkovChain(order)
         self.trainingData = {}
 
-    def train(self, words, verbose=False):
+    def train(self, words):
         for w in words:
             self.trainingData[w] = False
-        self.chain.train(trainingData, verbose)
+        self.chain.train(trainingData)
 
     def next(self):
         return self.chain.next()
 
-    def nextNew(self):
+    def next_new(self):
         generated = ''
         while True:
             generated = self.next()
@@ -110,27 +107,30 @@ class Generator:
         return generated
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description=sys.argv[0])
-    parser.add_argument('-m', '--model', help='use MODEL file', required=True)
-    parser.add_argument('-t', '--training-data', help='training data')
-    parser.add_argument('-i', '--interact', action='store_true', help='interact')
-    parser.add_argument('-o', '--order', type=int, default=8, help='Markov chain order, defaults to 8')
-    parser.add_argument('-n', '--number', type=int, help='generate a number of N words', default=1)
-    parser.add_argument('-r', '--regex', type=str, help='regex to generate')
-    parser.add_argument('-p', '--plot', action='store_true', help='plot state-transition diagram')
-    parser.add_argument('-v', '--verbose', action='store_true', help='show progress bar')
+    parser = argparse.ArgumentParser(prog='Markov Chain Model Generator')
+    subparsers = parser.add_subparsers(dest='command')
+    
+    training_parser = subparsers.add_parser('train')
+    training_parser.add_argument('-w', '--wordlist', type=str, help='word list to train on', required=True)
+    training_parser.add_argument('-o', '--order', type=int, default=8, help='Markov chain order, defaults to 8')
+
+    generation_parser = subparsers.add_parser('generate')
+    generation_parser.add_argument('-n', '--number-of-words', type=int, help='generate N words, defaults to 1', default=1, metavar='N')
+    generation_parser.add_argument('-m', '--model', help='model output in training step', required=True)
+    generation_parser.add_argument('-p', '--plot', action='store_true', help='plot state-transition diagram')
+
     args = parser.parse_args()
-    if args.training_data:
-        trainingData = [w.strip() for w in open(args.training_data).readlines()]
+    if args.command == 'train':
+        trainingData = [w.strip() for w in open(args.wordlist).readlines()]
         g = Generator(args.order)
-        g.train(trainingData, verbose=args.verbose)
-        pickle.dump(g, open(args.model, 'wb'))
-    else:
+        g.train(trainingData)
+        wordlist_filename = op.splitext(op.basename(args.wordlist))[0]
+        pickle.dump(g, open(wordlist_filename + '.pkl', 'wb'))
+    elif args.command == 'generate':
         g = pickle.load(open(args.model, 'rb'))
-    if args.interact:
-        code.interact(banner='', local=globals().update(locals()) or globals(), exitmsg='')
-    if args.plot:
-        while True:
-            plot(g.chain)
-    for i in range(args.number):
-        print(g.nextNew())
+        if args.plot:
+            while True:
+                plot(g.chain)
+        else:
+            for i in range(args.number_of_words):
+                print(g.next_new())
