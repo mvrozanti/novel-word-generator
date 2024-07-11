@@ -36,10 +36,11 @@ class WeightedVector:
         self.cummulative_weights += [weight + self.maxsize()]
 
     def maxsize(self):
-        return 0. if not self.cummulative_weights else self.cummulative_weights[-1]
+        return 0 if not self.cummulative_weights else int(self.cummulative_weights[-1])
 
     def get_random(self):
-        return self.get(random.randint(0,self.maxsize()-1))
+        rand = random.randint(0, self.maxsize()-1)
+        return self.get(rand)
 
     def get(self, value):
         assert(value < self.maxsize())
